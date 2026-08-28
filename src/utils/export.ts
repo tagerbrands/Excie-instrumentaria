@@ -67,6 +67,7 @@ export const exportToExcel = (interviews: InterviewData[]) => {
   // Format standard column widths for better readibility
   const wscols = [
     {wch: 10}, // ID
+    {wch: 12}, // Set Nummer
     {wch: 20}, // Laatst gewerkt
     {wch: 20}, // Excie
     {wch: 15}, // Datum

@@ -447,7 +447,7 @@ export const InterviewForm: React.FC<Props> = ({ initialData, onBack, toggleThem
                 </div>
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800/50">
-                  <h3 className="text-lg font-bold text-blue-900 dark:text-blue-400 mb-4">Gedeelde Practices / Opmerkingen</h3>
+                  <h3 className="text-lg font-bold text-blue-900 dark:text-blue-400 mb-4">Beschikbaar om te delen</h3>
                   {sharedNotes.length > 0 ? (
                     <ul className="list-disc pl-5 space-y-4 text-sm text-blue-800 dark:text-blue-300">
                       {sharedNotes.map((item, idx) => (

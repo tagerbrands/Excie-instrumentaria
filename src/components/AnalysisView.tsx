@@ -261,7 +261,7 @@ export const AnalysisView: React.FC<Props> = ({ sourceIds, analysisId, onBack, t
             ))}
             <li>
               <button onClick={() => scrollTo('section-shared')} className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                Gedeelde Practices
+                Beschikbaar om te delen
               </button>
             </li>
           </ul>
@@ -421,9 +421,9 @@ export const AnalysisView: React.FC<Props> = ({ sourceIds, analysisId, onBack, t
               </div>
             ))}
 
-            {/* Gedeelde Practices sectie */}
+            {/* Beschikbaar om te delen sectie */}
             <div id="section-shared" className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 scroll-mt-24">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 border-b border-gray-200 dark:border-gray-700 pb-3">Gedeelde Practices uit alle bronmetingen</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 border-b border-gray-200 dark:border-gray-700 pb-3">Beschikbaar om te delen uit alle bronmetingen</h2>
               
               {(() => {
                 const practicesByCategory: Record<string, { theme: string, excie: string, note: string }[]> = {};
