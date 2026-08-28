@@ -35,7 +35,8 @@ export interface InterviewData {
   onderwijsvormOpmerkingen: string;
   doelExcie: string;
   drieDoelen: string;
-  borgingsagenda: string;
+  borgingsagenda: 'Ja' | 'Nee' | '';
+  borgingsagendaDelen: 'Ja' | 'Nee' | '';
   modelKader: string;
   
   // Categories
@@ -97,8 +98,7 @@ export const ENTITY_THEMES: Record<string, ThemeInfo[]> = {
       subthemes: [
         { subtheme: 'Bewijsmateriaal (Low stake)', toelichting: 'Integratie van bewijsmaterialen en bijbehorende feedback in het onderwijsontwerp, conform de principes van constructive alignment.', suggesties: 'Stel vast dat bewijsmaterialen zijn ontworpen in relatie tot kwaliteitscriteria, hoe ze worden verzameld en hoe en door wie feedback wordt gegenereerd en vastgelegd. Zie periodiek en steekproefsgewijs toe op de uitvoer van de vastgestelde procedures.' },
         { subtheme: 'Eerder verworven bewijs (EVB)', toelichting: 'Richtlijnen voor de omgang met bewijsmaterialen die buiten het toezicht van de opleiding tot stand zijn gekomen.', suggesties: 'Toets of de EVB-procedure de kwaliteit en authenticiteit van extern bewijsmateriaal waarborgt. Zie periodiek en steekproefsgewijs toe op de uitvoer van de vastgestelde procedures.' },
-        { subtheme: 'Tussentijdse evaluatie (Intermediate stake)', toelichting: 'Feedbackmomenten die halverwege het leertraject inzicht geven in de voortgang richting de LUKs. Hierbij wordt het portfolio holistisch bekeken.', suggesties: 'Verifieer of de status van deze beoordeling in relatie tot de beslissing transparant is voor alle actoren. Valideer of beoordelingscriteria in relatie tot het holistische oordeel transparant zijn voor alle actoren. Zie periodiek en steekproefsgewijs toe op de uitvoer van de vastgestelde procedures.' },
-        { subtheme: 'Beslissing (High stake)', toelichting: 'Het uiteindelijke besluitvormingsproces waarbij wordt vastgesteld of een student voldoet aan de toetscriteria.', suggesties: 'Toets of de beslisprocedure grip geeft op de rolverdeling, mate van (on)afhankelijkheid van beoordelaars en toepassing van vierogenbeleid. Beoordeel of de beslisprocedure aan alle eisen voldoet (conform OER, examinatorhandelingen, remediëring, enz.). Beoordeel of toetsinstructies en evt. rubrics van voldoende kwaliteit zijn. Zie periodiek en steekproefsgewijs toe op de uitvoer van de vastgestelde procedures.' }
+        { subtheme: 'Tussentijdse evaluatie (Intermediate stake)', toelichting: 'Feedbackmomenten die halverwege het leertraject inzicht geven in de voortgang richting de LUKs. Hierbij wordt het portfolio holistisch bekeken.', suggesties: 'Verifieer of de status van deze beoordeling in relatie tot de beslissing transparant is voor alle actoren. Valideer of beoordelingscriteria in relatie tot het holistische oordeel transparant zijn voor alle actoren. Zie periodiek en steekproefsgewijs toe op de uitvoer van de vastgestelde procedures.' }
       ]
     },
     {
@@ -123,6 +123,12 @@ export const ENTITY_THEMES: Record<string, ThemeInfo[]> = {
     }
   ],
   toetsbeleid: [
+    {
+      theme: 'Kaders & Procedures',
+      subthemes: [
+        { subtheme: 'Beslissing (High stake)', toelichting: 'Het uiteindelijke besluitvormingsproces waarbij wordt vastgesteld of een student voldoet aan de toetscriteria.', suggesties: 'Toets of de beslisprocedure grip geeft op de rolverdeling, mate van (on)afhankelijkheid van beoordelaars en toepassing van vierogenbeleid. Beoordeel of de beslisprocedure aan alle eisen voldoet (conform OER, examinatorhandelingen, remediëring, enz.). Beoordeel of toetsinstructies en evt. rubrics van voldoende kwaliteit zijn. Zie periodiek en steekproefsgewijs toe op de uitvoer van de vastgestelde procedures.' }
+      ]
+    },
     {
       theme: 'Organisatie',
       subthemes: [
@@ -173,6 +179,7 @@ export const defaultInterview: Omit<InterviewData, 'id' | 'lastUpdated'> = {
   doelExcie: '',
   drieDoelen: '',
   borgingsagenda: '',
+  borgingsagendaDelen: '',
   modelKader: '',
   toetsbeleid: ENTITY_THEMES['toetsbeleid'].map(t => createEmptyThemeResponse(t.theme)),
   toetsorganisatie: ENTITY_THEMES['toetsorganisatie'].map(t => createEmptyThemeResponse(t.theme)),
@@ -188,7 +195,8 @@ export const ONDERWIJSVORM_OPTIONS = [
   'TGO',
   'Programmatisch toetsen',
   'Flexibel onderwijs',
-  'Inter-/transdiciplinair toetsen'
+  'Inter-/transdiciplinair toetsen',
+  'Anders, nl...'
 ];
 
 export const CATEGORIES = [

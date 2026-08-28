@@ -29,7 +29,8 @@ export const exportToExcel = (interviews: InterviewData[]) => {
       'Onderwijsvorm': interview.onderwijsvorm.join(', ') + (interview.onderwijsvormOpmerkingen ? ` (${interview.onderwijsvormOpmerkingen})` : ''),
       'Belangrijkste doel excie': interview.doelExcie,
       'Welke 3 doelen centraal': interview.drieDoelen,
-      'Borgingsagenda/-kalender': interview.borgingsagenda,
+      'Borgingsagenda/-kalender (Ja/Nee)': interview.borgingsagenda,
+      'Borgingsagenda Delen (Ja/Nee)': interview.borgingsagendaDelen,
       'Model of kader': interview.modelKader,
     };
 

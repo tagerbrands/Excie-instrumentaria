@@ -257,8 +257,36 @@ export const InterviewForm: React.FC<Props> = ({ initialData, onBack, toggleThem
 
             <TextAreaField label="Wat is in uw eigen woorden het belangrijkste doel van uw excie?" value={data.doelExcie} onChange={(v) => handleChange('doelExcie', v)} />
             <TextAreaField label="Welke 3 doelen staan in de praktijk het meest centraal binnen uw excie?" value={data.drieDoelen} onChange={(v) => handleChange('drieDoelen', v)} />
-            <TextAreaField label="Maakt u gebruik van een borgingsagenda/-kalender? Zo ja, kunt u deze delen?" value={data.borgingsagenda} onChange={(v) => handleChange('borgingsagenda', v)} />
-            <TextAreaField label="Maakt u gebruik van een model of kader (bijv. Toetsweb)?" value={data.modelKader} onChange={(v) => handleChange('modelKader', v)} />
+                        <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Maakt u gebruik van een borgingsagenda/-kalender?</label>
+              <div className="flex gap-4 mb-2">
+                 <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                   <input type="radio" name="borgingsagenda" value="Ja" checked={data.borgingsagenda === 'Ja'} onChange={() => handleChange('borgingsagenda', 'Ja')} className="text-blue-600 focus:ring-blue-500" />
+                   Ja
+                 </label>
+                 <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                   <input type="radio" name="borgingsagenda" value="Nee" checked={data.borgingsagenda === 'Nee'} onChange={() => { handleChange('borgingsagenda', 'Nee'); handleChange('borgingsagendaDelen', ''); }} className="text-blue-600 focus:ring-blue-500" />
+                   Nee
+                 </label>
+              </div>
+            </div>
+            
+            {data.borgingsagenda === 'Ja' && (
+              <div className="mb-4 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Kunt u deze delen?</label>
+                <div className="flex gap-4 mb-2">
+                   <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                     <input type="radio" name="borgingsagendaDelen" value="Ja" checked={data.borgingsagendaDelen === 'Ja'} onChange={() => handleChange('borgingsagendaDelen', 'Ja')} className="text-blue-600 focus:ring-blue-500" />
+                     Ja
+                   </label>
+                   <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                     <input type="radio" name="borgingsagendaDelen" value="Nee" checked={data.borgingsagendaDelen === 'Nee'} onChange={() => handleChange('borgingsagendaDelen', 'Nee')} className="text-blue-600 focus:ring-blue-500" />
+                     Nee
+                   </label>
+                </div>
+              </div>
+            )}
+            <TextAreaField label="Maakt u bij het borgen gebruik van een model of kader (bijv. Toetsweb)?" value={data.modelKader} onChange={(v) => handleChange('modelKader', v)} />
 
           </div>
         </div>
@@ -303,7 +331,7 @@ export const InterviewForm: React.FC<Props> = ({ initialData, onBack, toggleThem
           </div>
           
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6 transition-colors">
-            <TextAreaField label="Heeft u aanvullingen? Laat het evt. later nog weten." value={data.verdereInstrumenten} onChange={(v) => handleChange('verdereInstrumenten', v)} />
+            <TextAreaField label="Heeft u aanvullingen?" placeholder="Laat het evt. later nog weten, bijv. via mail." value={data.verdereInstrumenten} onChange={(v) => handleChange('verdereInstrumenten', v)} />
             <TextAreaField label="Hoe zou u uw eigenstandig oordeel over de toetskwaliteit kenbaar maken?" value={data.eigenstandigOordeel} onChange={(v) => handleChange('eigenstandigOordeel', v)} />
             <TextAreaField label="Welke vragen heeft u nog over het borgen van toetskwaliteit?" value={data.vragenBorgenKwaliteit} onChange={(v) => handleChange('vragenBorgenKwaliteit', v)} />
           </div>
@@ -330,6 +358,10 @@ export const InterviewForm: React.FC<Props> = ({ initialData, onBack, toggleThem
                 });
               });
             });
+            
+            if (data.borgingsagendaDelen === 'Ja') {
+              sharedNotes.push({ category: 'Algemeen', themeName: 'Borgingsagenda', note: 'Heeft aangegeven de borgingsagenda/-kalender te kunnen delen.' });
+            }
 
             const scrollToTheme = (id: string) => {
               const el = document.getElementById(`theme-${id}`);

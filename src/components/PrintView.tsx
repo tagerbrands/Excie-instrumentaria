@@ -31,7 +31,7 @@ export const PrintView: React.FC<{ interview: InterviewData }> = ({ interview })
         <QA question="Wat is in uw eigen woorden het belangrijkste doel van uw excie?" answer={interview.doelExcie} />
         <QA question="Welke 3 doelen staan in de praktijk het meest centraal binnen uw excie?" answer={interview.drieDoelen} />
         <QA question="Maakt u gebruik van een borgingsagenda/-kalender? Zo ja, kunt u deze delen?" answer={interview.borgingsagenda} />
-        <QA question="Maakt u gebruik van een model of kader (bijv. Toetsweb)?" answer={interview.modelKader} />
+        <QA question="Maakt u bij het borgen gebruik van een model of kader (bijv. Toetsweb)?" answer={interview.modelKader} />
       </div>
 
       <div className="mb-8">
@@ -68,7 +68,7 @@ export const PrintView: React.FC<{ interview: InterviewData }> = ({ interview })
 
       <div className="pt-6 border-t border-gray-200 dark:border-gray-700 mt-8 break-inside-avoid">
         <SectionHeading>Slotvragen</SectionHeading>
-        <QA question="Heeft u aanvullingen? Laat het evt. later nog weten." answer={interview.verdereInstrumenten} />
+        <QA question="Heeft u aanvullingen?" answer={interview.verdereInstrumenten} />
         <QA question="Hoe zou u uw eigenstandig oordeel over de toetskwaliteit kenbaar maken?" answer={interview.eigenstandigOordeel} />
         <QA question="Welke vragen heeft u nog over het borgen van toetskwaliteit?" answer={interview.vragenBorgenKwaliteit} />
       </div>

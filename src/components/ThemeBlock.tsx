@@ -84,8 +84,8 @@ export const ThemeBlock: React.FC<Props> = ({ categoryKey, themeData, colorClass
             <div className="space-y-5">
               {themeInfo.subthemes.map((st, idx) => {
                 const suggestieLijst = st.suggesties
-                  .replace(/\.\s+([A-Z])/g, '.$$SPLIT$$$1')
-                  .split('$$SPLIT$$')
+                  .replace(/\.\s+([A-Z])/g, '.__SPLIT__$1')
+                  .split('__SPLIT__')
                   .map(s => s.trim())
                   .filter(s => s.length > 0);
 
