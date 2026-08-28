@@ -1,0 +1,427 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { ArrowLeft, Save, Check, Moon, Sun, ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react';
+import { InterviewData, defaultInterview, CATEGORIES, ThemeResponse } from '../types';
+import { getInterviews, saveInterview } from '../store';
+import { v4 as uuidv4 } from 'uuid';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { ArrowRight } from 'lucide-react';
+
+interface Props {
+  sourceIds: string[];
+  analysisId: string | null;
+  onBack: () => void;
+  toggleTheme: () => void;
+  isDarkMode: boolean;
+}
+
+const CustomBarTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 shadow-md rounded-md text-sm">
+        <p className="font-bold text-gray-900 dark:text-gray-100">{label}</p>
+        <p className="text-gray-700 dark:text-gray-300">Aantal: {payload[0].value}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-[200px] mt-1 break-words leading-tight">
+          {payload[0].payload.excies}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+export const AnalysisView: React.FC<Props> = ({ sourceIds, analysisId, onBack, toggleTheme, isDarkMode }) => {
+  const [data, setData] = useState<InterviewData | null>(null);
+  const textareasRef = React.useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const [sourceInterviews, setSourceInterviews] = useState<InterviewData[]>([]);
+  const [activeSourceId, setActiveSourceId] = useState<string>('');
+  const [savedStatus, setSavedStatus] = useState<boolean>(false);
+
+  useEffect(() => {
+    const all = getInterviews();
+    if (analysisId) {
+      const existing = all.find(i => i.id === analysisId);
+      if (existing) {
+        setData(existing);
+        const sources = all.filter(i => existing.analysisSourceIds?.includes(i.id));
+        setSourceInterviews(sources);
+        if (sources.length > 0) setActiveSourceId(sources[0].id);
+      }
+    } else {
+      const sources = all.filter(i => sourceIds.includes(i.id));
+      setSourceInterviews(sources);
+      if (sources.length > 0) setActiveSourceId(sources[0].id);
+
+      const newData: InterviewData = {
+        ...defaultInterview,
+        id: uuidv4(),
+        isAnalysis: true,
+        analysisSourceIds: sourceIds,
+        analysisTitle: `Analyse van ${sourceIds.length} metingen`,
+        datum: new Date().toISOString().split('T')[0],
+        lastUpdated: new Date().toISOString(),
+        toetsbeleid: defaultInterview.toetsbeleid.map(t => ({...t, id: uuidv4()})),
+        toetsorganisatie: defaultInterview.toetsorganisatie.map(t => ({...t, id: uuidv4()})),
+        toetsbekwaamheid: defaultInterview.toetsbekwaamheid.map(t => ({...t, id: uuidv4()})),
+        toetsTaken: defaultInterview.toetsTaken.map(t => ({...t, id: uuidv4()})),
+        toetsprogramma: defaultInterview.toetsprogramma.map(t => ({...t, id: uuidv4()})),
+      };
+      setData(newData);
+      saveInterview(newData);
+    }
+  }, [analysisId, sourceIds]);
+
+  useEffect(() => {
+    if (!data) return;
+    const handler = setTimeout(() => {
+      saveInterview(data);
+      setSavedStatus(true);
+      setTimeout(() => setSavedStatus(false), 2000);
+    }, 1000);
+    return () => clearTimeout(handler);
+  }, [data]);
+
+  const onderwijsvormData = useMemo(() => {
+    const grouped: Record<string, string[]> = {};
+    sourceInterviews.forEach(inv => {
+      const excie = inv.excie || 'Onbekend';
+      inv.onderwijsvorm.forEach(ov => {
+        if (!grouped[ov]) grouped[ov] = [];
+        grouped[ov].push(excie);
+      });
+    });
+    return Object.entries(grouped).map(([name, excies]) => ({
+      name,
+      count: excies.length,
+      excies: excies.join(', ')
+    }));
+  }, [sourceInterviews]);
+
+  const activeSource = useMemo(() => {
+    return sourceInterviews.find(i => i.id === activeSourceId);
+  }, [activeSourceId, sourceInterviews]);
+
+  const cycleSource = (dir: 1 | -1) => {
+    const idx = sourceInterviews.findIndex(i => i.id === activeSourceId);
+    if (idx !== -1) {
+      let nextIdx = idx + dir;
+      if (nextIdx < 0) nextIdx = sourceInterviews.length - 1;
+      if (nextIdx >= sourceInterviews.length) nextIdx = 0;
+      setActiveSourceId(sourceInterviews[nextIdx].id);
+    }
+  };
+
+  const handleChange = (field: keyof InterviewData, value: any) => {
+    if (!data) return;
+    setData({ ...data, [field]: value });
+  };
+
+  const handleSyntheseChange = (categoryKey: keyof InterviewData, themeId: string, value: string) => {
+    setData(prev => {
+      if (!prev) return prev;
+      const arr = prev[categoryKey] as ThemeResponse[];
+      return {
+        ...prev,
+        [categoryKey]: arr.map(item => item.id === themeId ? { ...item, synthese: value } : item)
+      };
+    });
+  };
+
+  const insertText = (text: string, categoryKey: string, themeId: string) => {
+    if (!text) return;
+    setData(prev => {
+      if (!prev) return prev;
+      const arr = prev[categoryKey as keyof InterviewData] as ThemeResponse[];
+      const theme = arr.find(t => t.id === themeId);
+      const currentSynthese = theme?.synthese || '';
+      
+      const textarea = textareasRef.current[themeId];
+      let newText = '';
+      let newCursorPos = 0;
+      
+      if (textarea && document.activeElement === textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        newText = currentSynthese.substring(0, start) + text + currentSynthese.substring(end);
+        newCursorPos = start + text.length;
+      } else {
+        newText = currentSynthese ? currentSynthese + '\n' + text : text;
+        newCursorPos = newText.length;
+      }
+
+      const newArr = arr.map(item => item.id === themeId ? { ...item, synthese: newText } : item);
+      
+      setTimeout(() => {
+        if (textarea) {
+          textarea.focus();
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+
+      return { ...prev, [categoryKey]: newArr };
+    });
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  if (!data) return <div className="p-8">Laden...</div>;
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors duration-200">
+      {/* Sidebar Navigation */}
+      <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 fixed h-full flex flex-col transition-colors z-40">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <button 
+            onClick={onBack}
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors"
+          >
+            <ArrowLeft size={18} /> Terug naar Dashboard
+          </button>
+        </div>
+        <div className="p-4 flex-1 overflow-y-auto">
+          <div className="flex items-center justify-between mb-4">
+             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Navigatie</h3>
+             <button onClick={toggleTheme} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+               {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
+             </button>
+          </div>
+          <ul className="space-y-2">
+            <li>
+              <button onClick={() => scrollTo('section-top')} className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                Top (Onderwijsvormen)
+              </button>
+            </li>
+            {CATEGORIES.map(cat => (
+              <li key={cat.key}>
+                <button 
+                  onClick={() => scrollTo(`section-${cat.key}`)}
+                  className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  {cat.label}
+                </button>
+              </li>
+            ))}
+            <li>
+              <button onClick={() => scrollTo('section-shared')} className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                Gedeelde Practices
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="ml-64 flex-1 flex flex-col h-screen overflow-hidden">
+        
+        {/* Sticky Header with Save Status & Source Selector */}
+        <div className="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-4 flex-1">
+            <span className="font-bold text-gray-700 dark:text-gray-300">Bronmeting bekijken:</span>
+            <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 p-1.5 rounded-lg border border-blue-200 dark:border-blue-800">
+               <button onClick={() => cycleSource(-1)} className="p-1 hover:bg-blue-200 dark:hover:bg-blue-800 rounded transition-colors text-blue-700 dark:text-blue-300">
+                 <ChevronLeft size={20} />
+               </button>
+               <select 
+                 value={activeSourceId} 
+                 onChange={e => setActiveSourceId(e.target.value)}
+                 className="bg-transparent border-none font-medium text-blue-800 dark:text-blue-200 focus:ring-0 cursor-pointer min-w-[200px]"
+               >
+                 {sourceInterviews.map(inv => (
+                   <option key={inv.id} value={inv.id}>{inv.excie || 'Onbekend'} ({inv.datum})</option>
+                 ))}
+               </select>
+               <button onClick={() => cycleSource(1)} className="p-1 hover:bg-blue-200 dark:hover:bg-blue-800 rounded transition-colors text-blue-700 dark:text-blue-300">
+                 <ChevronRight size={20} />
+               </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+             <div className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full transition-all duration-300 \${savedStatus ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
+               {savedStatus ? <Check size={16} /> : <Save size={16} />}
+               {savedStatus ? 'Opgeslagen' : 'Automatisch opslaan...'}
+             </div>
+          </div>
+        </div>
+
+        {/* Scrollable Form Content */}
+        <div className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-6xl mx-auto space-y-12">
+            
+            <div id="section-top" className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-purple-200 dark:border-purple-800/50 relative scroll-mt-24">
+              <div className="absolute top-0 left-0 w-full h-1 bg-purple-500 rounded-t-xl"></div>
+              
+              <div className="mb-8">
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">Titel van deze Analyse</label>
+                <input 
+                  type="text" 
+                  value={data.analysisTitle || ''}
+                  onChange={(e) => handleChange('analysisTitle', e.target.value)}
+                  className="w-full text-3xl font-bold border-b-2 border-gray-200 dark:border-gray-700 focus:border-purple-500 bg-transparent outline-none py-2 text-gray-900 dark:text-gray-100 transition-colors"
+                  placeholder="Naam van analyse..."
+                />
+              </div>
+
+              {/* Chart */}
+              <div>
+                <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                  <BarChart2 size={20} className="text-purple-600 dark:text-purple-400"/>
+                  Onderwijsvormen (totaal)
+                </h2>
+                {onderwijsvormData.length > 0 ? (
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={onderwijsvormData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                        <XAxis dataKey="name" stroke={isDarkMode ? '#9CA3AF' : '#4B5563'} tick={{fontSize: 12}} />
+                        <YAxis allowDecimals={false} stroke={isDarkMode ? '#9CA3AF' : '#4B5563'} />
+                        <Tooltip content={<CustomBarTooltip />} />
+                        <Bar dataKey="count" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">Geen onderwijsvormen geregistreerd in bronmetingen.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Synthese per categorie */}
+            {CATEGORIES.map(cat => (
+              <div key={cat.key} id={`section-\${cat.key}`} className="scroll-mt-24">
+                <div className={`\${cat.headerBg} dark:opacity-80 border \${cat.color.split(' ')[1]} px-4 py-2 mb-6 rounded-md`}>
+                  <h2 className="font-bold text-gray-800 tracking-wider uppercase">{cat.label}</h2>
+                </div>
+
+                <div className="space-y-8">
+                  {(data[cat.key as keyof InterviewData] as ThemeResponse[]).map((themeData, idx) => {
+                    const sourceThemeData = (activeSource?.[cat.key as keyof InterviewData] as ThemeResponse[])?.find(t => t.themeName === themeData.themeName) || {} as ThemeResponse;
+                    
+                    const AnswerRow = ({ label, value, onInsert }: { label: string, value: string, onInsert: () => void }) => {
+                      if (!value) return null;
+                      return (
+                        <div className="flex gap-3 group">
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{label}</div>
+                            <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{value}</div>
+                          </div>
+                          <button 
+                            onClick={onInsert}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 mt-2 h-fit rounded text-purple-600 hover:bg-purple-100 dark:text-purple-400 dark:hover:bg-purple-900/50 transition-all flex-shrink-0"
+                            title="Kopieer naar notitieveld"
+                          >
+                            <ArrowRight size={16} />
+                          </button>
+                        </div>
+                      );
+                    };
+
+                    return (
+                      <div key={themeData.id} className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6 border-b border-gray-100 dark:border-gray-700 pb-2">
+                          Thema: {themeData.themeName}
+                        </h3>
+                        
+                        <div className="flex flex-col lg:flex-row gap-6">
+                          {/* Left: Source Answers */}
+                          <div className="w-full lg:w-1/2 flex flex-col gap-6">
+                            <h4 className="font-bold text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                               <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                               Antwoorden uit bron: {activeSource?.excie || 'Geen bron geselecteerd'}
+                            </h4>
+                            
+                            {sourceThemeData.answerSets?.length > 0 ? (
+                              sourceThemeData.answerSets.map((a, i) => (
+                                <div key={a.id} className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-md border border-gray-200 dark:border-gray-700 space-y-4">
+                                  {sourceThemeData.answerSets!.length > 1 && <div className="font-bold text-xs text-gray-400 uppercase">Set {i + 1}</div>}
+                                  
+                                  <AnswerRow label="Welke informatie gebruik je?" value={a.infoGebruik} onInsert={() => insertText(a.infoGebruik, cat.key, themeData.id)} />
+                                  <AnswerRow label="Hoe kom je aan die informatie?" value={a.infoBron} onInsert={() => insertText(a.infoBron, cat.key, themeData.id)} />
+                                  <AnswerRow label="Wat levert dat op?" value={a.opbrengst} onInsert={() => insertText(a.opbrengst, cat.key, themeData.id)} />
+                                  <AnswerRow label="Wat doe je ermee?" value={a.actie} onInsert={() => insertText(a.actie, cat.key, themeData.id)} />
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-gray-500 italic text-sm p-4 border border-dashed border-gray-300 dark:border-gray-700 rounded-md">Geen data in deze bron.</div>
+                            )}
+                          </div>
+                          
+                          {/* Right: Synthesis */}
+                          <div className="w-full lg:w-1/2 flex flex-col">
+                            <h4 className="font-bold text-sm text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                              Synthese Notitieveld
+                            </h4>
+                            <textarea
+                               ref={el => textareasRef.current[themeData.id] = el}
+                               value={themeData.synthese || ''}
+                               onChange={e => handleSyntheseChange(cat.key as keyof InterviewData, themeData.id, e.target.value)}
+                               placeholder="Typ hier de synthese..."
+                               className="flex-1 w-full p-4 border-2 border-purple-200 dark:border-purple-900/50 rounded-md bg-purple-50/30 dark:bg-purple-900/10 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 dark:text-gray-100 outline-none transition-colors min-h-[300px] resize-y"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Gedeelde Practices sectie */}
+            <div id="section-shared" className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 scroll-mt-24">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 border-b border-gray-200 dark:border-gray-700 pb-3">Gedeelde Practices uit alle bronmetingen</h2>
+              
+              {(() => {
+                const practicesByCategory: Record<string, { theme: string, excie: string, note: string }[]> = {};
+                
+                sourceInterviews.forEach(inv => {
+                  CATEGORIES.forEach(cat => {
+                    const themes = inv[cat.key as keyof InterviewData] as ThemeResponse[];
+                    themes?.forEach(t => {
+                      t.answerSets?.forEach(a => {
+                        if (a.delenOptIn === 'Ja' && a.delen.trim()) {
+                          if (!practicesByCategory[cat.label]) practicesByCategory[cat.label] = [];
+                          practicesByCategory[cat.label].push({ theme: t.themeName, excie: inv.excie, note: a.delen });
+                        }
+                      });
+                    });
+                  });
+                });
+
+                const categoriesWithPractices = Object.keys(practicesByCategory);
+
+                if (categoriesWithPractices.length === 0) {
+                  return <p className="text-gray-500 italic">Geen gedeelde practices gevonden in de geselecteerde metingen.</p>;
+                }
+
+                return (
+                  <div className="space-y-8">
+                    {categoriesWithPractices.map(catLabel => (
+                      <div key={catLabel} className="bg-blue-50/50 dark:bg-blue-900/10 p-5 rounded-lg border border-blue-100 dark:border-blue-900/50">
+                        <h3 className="font-bold text-lg text-blue-900 dark:text-blue-300 mb-4">{catLabel}</h3>
+                        <div className="space-y-4">
+                          {practicesByCategory[catLabel].map((p, idx) => (
+                            <div key={idx} className="bg-white dark:bg-gray-800 p-4 rounded shadow-sm border border-gray-200 dark:border-gray-700">
+                              <div className="flex items-center gap-2 mb-2 text-sm">
+                                <span className="font-bold text-gray-700 dark:text-gray-300">Thema:</span> {p.theme}
+                                <span className="text-gray-300 dark:text-gray-600">|</span>
+                                <span className="font-bold text-gray-700 dark:text-gray-300">Excie:</span> <span className="text-blue-600 dark:text-blue-400">{p.excie || 'Onbekend'}</span>
+                              </div>
+                              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap pl-3 border-l-2 border-blue-300 dark:border-blue-700 py-1 italic">
+                                {p.note}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
