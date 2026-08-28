@@ -128,6 +128,47 @@ export const InterviewForm: React.FC<Props> = ({ initialData, onBack, toggleThem
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const getProgress = () => {
+    let filled = 0;
+    let totalThemes = 0;
+    
+    CATEGORIES.forEach(cat => {
+      totalThemes += (data[cat.key as keyof InterviewData] as ThemeResponse[])?.length || 0;
+    });
+
+    const total = 8 + totalThemes + 3;
+
+    if (data.excie?.trim()) filled++;
+    if (data.datum?.trim()) filled++;
+    if (data.cveLid?.trim()) filled++;
+    if (data.onderwijsvorm?.length > 0) filled++;
+    if (data.doelExcie?.trim()) filled++;
+    if (data.drieDoelen?.trim()) filled++;
+    if (data.borgingsagenda?.trim()) filled++;
+    if (data.modelKader?.trim()) filled++;
+
+    CATEGORIES.forEach(cat => {
+      const themes = data[cat.key as keyof InterviewData] as ThemeResponse[];
+      themes?.forEach(t => {
+        const isFullyFilled = t.answerSets?.some(a => 
+          a.infoGebruik?.trim() && 
+          a.infoBron?.trim() && 
+          a.opbrengst?.trim() && 
+          a.actie?.trim()
+        );
+        if (isFullyFilled) filled++;
+      });
+    });
+
+    if (data.verdereInstrumenten?.trim()) filled++;
+    if (data.eigenstandigOordeel?.trim()) filled++;
+    if (data.vragenBorgenKwaliteit?.trim()) filled++;
+
+    return Math.round((filled / total) * 100);
+  };
+
+  const progress = getProgress();
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors duration-200">
       {/* Sticky Sidebar Navigation */}
@@ -142,6 +183,14 @@ export const InterviewForm: React.FC<Props> = ({ initialData, onBack, toggleThem
           </button>
         </div>
         <div className="p-4 flex-1 overflow-y-auto">
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Voortgang</span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-700 ease-out" style={{ width: progress + '%' }}></div>
+            </div>
+          </div>
           <div className="flex items-center justify-between mb-4">
              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Navigatie</h3>
              <button onClick={toggleTheme} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
