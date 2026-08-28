@@ -80,12 +80,6 @@ export interface ThemeInfo {
 export const ENTITY_THEMES: Record<string, ThemeInfo[]> = {
   toetsTaken: [
     {
-      theme: 'LUK-kwaliteit',
-      subthemes: [
-        { subtheme: 'Formulering', toelichting: 'Heldere, toetsbare formuleringen van LUKs die zijn afgestemd op het juiste niveau binnen het curriculum. Rubrics maken criteria evt. concreet en meetbaar.', suggesties: 'Valideer of (doorontwikkelingen van) de LUKs voldoen aan de geldende NVAO kwaliteitseisen: tuning, niveau, taxonomie.' }
-      ]
-    },
-    {
       theme: 'Portfoliocriteria',
       subthemes: [
         { subtheme: 'Ontvankelijkheidscriteria', toelichting: 'Vastleggen van vereisten die niet onder de LUKs vallen, maar wel noodzaak zijn om juiste beslissingen te nemen.', suggesties: 'Evalueer deze criteria periodiek om vast te stellen dat ze 1) noodzakelijk zijn, 2) niet leiden tot overmatige belasting van studenten, 3) samenhang vertonen met de LUKs en 4) bijdragen aan de kwaliteit van beslissingen.' },
@@ -118,7 +112,8 @@ export const ENTITY_THEMES: Record<string, ThemeInfo[]> = {
     {
       theme: 'LUK-kwaliteit',
       subthemes: [
-        { subtheme: 'BOKS(AE)', toelichting: 'Body of Knowledge, Skills (and Attitude & Ethics), geformuleerd a.d.h.v. het beroepscompetentieprofiel.', suggesties: 'Toets of de LUKs de BOKS(AE) aantoonbaar dekken en of die relatie begrijpelijk is opgenomen in de Zelfevaluatie en Reflectie (ZER) t.b.v. accreditatie.' }
+        { subtheme: 'BOKS(AE)', toelichting: 'Body of Knowledge, Skills (and Attitude & Ethics), geformuleerd a.d.h.v. het beroepscompetentieprofiel.', suggesties: 'Toets of de LUKs de BOKS(AE) aantoonbaar dekken en of die relatie begrijpelijk is opgenomen in de Zelfevaluatie en Reflectie (ZER) t.b.v. accreditatie.' },
+        { subtheme: 'Formulering', toelichting: 'Heldere, toetsbare formuleringen van LUKs die zijn afgestemd op het juiste niveau binnen het curriculum. Rubrics maken criteria evt. concreet en meetbaar.', suggesties: 'Valideer of (doorontwikkelingen van) de LUKs voldoen aan de geldende NVAO kwaliteitseisen: tuning, niveau, taxonomie.' }
       ]
     }
   ],
@@ -130,12 +125,6 @@ export const ENTITY_THEMES: Record<string, ThemeInfo[]> = {
       ]
     },
     {
-      theme: 'Organisatie',
-      subthemes: [
-        { subtheme: 'Governance', toelichting: 'De verdeling van rollen, taken en verantwoordelijkheden binnen het onderwijs- en toetssysteem.', suggesties: 'Analyseer systematisch of taken en verantwoordelijkheden bij de juiste rollen zijn belegd, of inzichtelijk is hoe rollen samenwerken en zich tot elkaar verhouden, met welk mandaat ze opereren en of facilitering adequaat is. Evalueer periodiek of de actoren rolvast handelen conform hun verantwoordelijkheden.' }
-      ]
-    },
-    {
       theme: 'Fraudebeleid',
       subthemes: [
         { subtheme: 'Onderzoek & Sanctioneren', toelichting: 'Na een melding van fraude start een onderzoek dat pedagogisch is ingericht, met als doel het leerproces van de student te ondersteunen in plaats van te straffen.', suggesties: 'Ontwerp en implementeer een methodiek voor fraudeonderzoek die recht doet aan haar doel en evalueer deze periodiek. Leg een sanctieladder transparant vast, en sanctioneer a.d.h.v. een heldere contextschets en onderbouwing.' }
@@ -143,6 +132,12 @@ export const ENTITY_THEMES: Record<string, ThemeInfo[]> = {
     }
   ],
   toetsorganisatie: [
+    {
+      theme: 'Organisatie',
+      subthemes: [
+        { subtheme: 'Governance', toelichting: 'De verdeling van rollen, taken en verantwoordelijkheden binnen het onderwijs- en toetssysteem.', suggesties: 'Analyseer systematisch of taken en verantwoordelijkheden bij de juiste rollen zijn belegd, of inzichtelijk is hoe rollen samenwerken en zich tot elkaar verhouden, met welk mandaat ze opereren en of facilitering adequaat is. Evalueer periodiek of de actoren rolvast handelen conform hun verantwoordelijkheden.' }
+      ]
+    },
     {
       theme: 'Profiel examinatoren',
       subthemes: [
