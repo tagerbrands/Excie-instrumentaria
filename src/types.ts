@@ -40,6 +40,7 @@ export interface InterviewData {
   modelKader: string;
   
   // Categories
+  categoryNotes?: Record<string, string>;
   toetsbeleid: ThemeResponse[];
   toetsorganisatie: ThemeResponse[];
   toetsbekwaamheid: ThemeResponse[];
@@ -176,6 +177,7 @@ export const defaultInterview: Omit<InterviewData, 'id' | 'lastUpdated'> = {
   borgingsagenda: '',
   borgingsagendaDelen: '',
   modelKader: '',
+  categoryNotes: {},
   toetsbeleid: ENTITY_THEMES['toetsbeleid'].map(t => createEmptyThemeResponse(t.theme)),
   toetsorganisatie: ENTITY_THEMES['toetsorganisatie'].map(t => createEmptyThemeResponse(t.theme)),
   toetsbekwaamheid: ENTITY_THEMES['toetsbekwaamheid'].map(t => createEmptyThemeResponse(t.theme)),

@@ -369,6 +369,15 @@ export const InterviewForm: React.FC<Props> = ({ initialData, onBack, toggleThem
                   />
                 </div>
               ))}
+              
+              <div className="mt-4 px-2">
+                <TextAreaField 
+                  label={`Algemene notities over de toetsentiteit ${cat.label.toLowerCase()}`}
+                  placeholder={`Ruimte voor extra opmerkingen of context over ${cat.label.toLowerCase()}...`}
+                  value={data.categoryNotes?.[cat.key] || ''}
+                  onChange={(v) => setData(prev => ({ ...prev, categoryNotes: { ...(prev.categoryNotes || {}), [cat.key]: v } }))}
+                />
+              </div>
             </div>
           </div>
         ))}

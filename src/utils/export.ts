@@ -2,23 +2,23 @@ import * as XLSX from 'xlsx';
 import { InterviewData, CATEGORIES, ThemeResponse, createEmptyThemeResponse } from '../types';
 
 export const exportToExcel = (interviews: InterviewData[]) => {
-  // Find maximum length of instruments in each category to create uniform columns
-  const maxLengths: Record<string, number> = {};
-  CATEGORIES.forEach(cat => {
-    maxLengths[cat.key] = 1;
-  });
+  // Find maximum number of sets in each theme across all interviews
+  const maxSetsPerTheme: Record<string, number> = {};
 
   interviews.forEach(interview => {
     CATEGORIES.forEach(cat => {
-      const mappings = interview[cat.key as keyof InterviewData] as ThemeResponse[];
-      if (mappings && mappings.length > maxLengths[cat.key]) {
-        maxLengths[cat.key] = mappings.length;
-      }
+      const mappings = interview[cat.key as keyof InterviewData] as ThemeResponse[] || [];
+      mappings.forEach(mapping => {
+        const key = `${cat.key}_${mapping.themeName}`;
+        const numSets = mapping.answerSets?.length || 1;
+        if (!maxSetsPerTheme[key] || numSets > maxSetsPerTheme[key]) {
+          maxSetsPerTheme[key] = numSets;
+        }
+      });
     });
   });
 
   const flatData = interviews.map(interview => {
-    
     // Base flattening
     const row: any = {
       'ID': interview.id,
@@ -37,19 +37,28 @@ export const exportToExcel = (interviews: InterviewData[]) => {
     // Flatten Categories
     CATEGORIES.forEach(cat => {
       const mappings = interview[cat.key as keyof InterviewData] as ThemeResponse[] || [];
-      const prefixBase = cat.label;
+      const catPrefix = cat.label;
 
-      for (let i = 0; i < maxLengths[cat.key]; i++) {
-        const mapping = mappings[i] || createEmptyThemeResponse('Onbekend thema');
-        const prefix = maxLengths[cat.key] > 1 ? `${prefixBase} - ${mapping.themeName}` : prefixBase;
+      // Category notes
+      row[`${catPrefix} - Algemene Notities`] = interview.categoryNotes?.[cat.key] || '';
+
+      mappings.forEach((mapping) => {
+        const key = `${cat.key}_${mapping.themeName}`;
+        const maxSets = maxSetsPerTheme[key] || 1;
+        const prefix = `${catPrefix} - ${mapping.themeName}`;
         
-        row[`${prefix} - Welke info gebruik je?`] = mapping.answerSets?.map((a, j) => mapping.answerSets!.length > 1 ? '--- Set ' + (j + 1) + ' ---\n' + a.infoGebruik : a.infoGebruik).join('\n\n') || '';
-        row[`${prefix} - Hoe kom je aan info?`] = mapping.answerSets?.map((a, j) => mapping.answerSets!.length > 1 ? '--- Set ' + (j + 1) + ' ---\n' + a.infoBron : a.infoBron).join('\n\n') || '';
-        row[`${prefix} - Wat levert dat op?`] = mapping.answerSets?.map((a, j) => mapping.answerSets!.length > 1 ? '--- Set ' + (j + 1) + ' ---\n' + a.opbrengst : a.opbrengst).join('\n\n') || '';
-        row[`${prefix} - Wat doe je ermee?`] = mapping.answerSets?.map((a, j) => mapping.answerSets!.length > 1 ? '--- Set ' + (j + 1) + ' ---\n' + a.actie : a.actie).join('\n\n') || '';
-        row[`${prefix} - Opt-in Delen?`] = mapping.answerSets?.map((a, j) => mapping.answerSets!.length > 1 ? '--- Set ' + (j + 1) + ' ---\n' + a.delenOptIn : a.delenOptIn).join('\n\n') || '';
-        row[`${prefix} - Heb je iets te delen?`] = mapping.answerSets?.map((a, j) => mapping.answerSets!.length > 1 ? '--- Set ' + (j + 1) + ' ---\n' + a.delen : a.delen).join('\n\n') || '';
-      }
+        for (let s = 0; s < maxSets; s++) {
+          const set = mapping.answerSets?.[s];
+          const setPrefix = maxSets > 1 ? `${prefix} (Set ${s + 1})` : prefix;
+
+          row[`${setPrefix} - Welke info gebruik je?`] = set?.infoGebruik || '';
+          row[`${setPrefix} - Hoe kom je aan info?`] = set?.infoBron || '';
+          row[`${setPrefix} - Wat levert dat op?`] = set?.opbrengst || '';
+          row[`${setPrefix} - Wat doe je ermee?`] = set?.actie || '';
+          row[`${setPrefix} - Opt-in Delen?`] = set?.delenOptIn || '';
+          row[`${setPrefix} - Heb je iets te delen?`] = set?.delen || '';
+        }
+      });
     });
 
     // Flatten Slotvragen
@@ -67,14 +76,13 @@ export const exportToExcel = (interviews: InterviewData[]) => {
   // Format standard column widths for better readibility
   const wscols = [
     {wch: 10}, // ID
-    {wch: 12}, // Set Nummer
     {wch: 20}, // Laatst gewerkt
     {wch: 20}, // Excie
     {wch: 15}, // Datum
     {wch: 20}, // CvE-lid
     {wch: 30}, // Onderwijsvorm
     // Add a default generous width for text areas
-    ...Array(30).fill({wch: 40}) 
+    ...Array(100).fill({wch: 40}) 
   ];
   worksheet['!cols'] = wscols;
 
