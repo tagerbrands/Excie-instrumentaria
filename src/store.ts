@@ -1,4 +1,4 @@
-import { InterviewData, ThemeResponse } from './types';
+import { InterviewData, AnswerSet } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 const STORAGE_KEY = 'excies_interviews';
@@ -12,22 +12,38 @@ export const getInterviews = (): InterviewData[] => {
     return parsed.map(item => {
       const migrateCategory = (catData: any[]) => {
         if (!catData) return [];
-        return catData.map(theme => {
-          if (theme.answerSets) return theme;
-          return {
-            id: theme.id,
-            themeName: theme.themeName,
-            answerSets: [{
+        // Check if it is the old ThemeResponse format
+        if (catData.length > 0 && catData[0].hasOwnProperty('themeName')) {
+          let flattened: any[] = [];
+          catData.forEach(theme => {
+            if (theme.answerSets && theme.answerSets.length > 0) {
+              theme.answerSets.forEach((ans: any, idx: number) => {
+                const hasContent = ans.infoGebruik || ans.infoBron || ans.opbrengst || ans.actie;
+                if (hasContent) {
+                  flattened.push({
+                    ...ans,
+                    setName: theme.themeName + (theme.answerSets.length > 1 ? ` (Set ${idx + 1})` : '')
+                  });
+                }
+              });
+            }
+          });
+          if (flattened.length === 0) {
+            flattened = [{
               id: uuidv4(),
-              infoGebruik: theme.infoGebruik || '',
-              infoBron: theme.infoBron || '',
-              opbrengst: theme.opbrengst || '',
-              actie: theme.actie || '',
-              delenOptIn: theme.delenOptIn || '',
-              delen: theme.delen || ''
-            }]
-          };
-        });
+              setName: 'Set 1',
+              infoGebruik: '',
+              infoBron: '',
+              opbrengst: '',
+              actie: '',
+              delenOptIn: '',
+              delen: ''
+            }];
+          }
+          return flattened;
+        }
+        
+        return catData;
       };
       return {
         ...item,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Save, Check, Moon, Sun, ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react';
-import { InterviewData, defaultInterview, CATEGORIES, ThemeResponse } from '../types';
+import { InterviewData, defaultInterview, CATEGORIES, AnswerSet } from '../types';
 import { getInterviews, saveInterview } from '../store';
 import { v4 as uuidv4 } from 'uuid';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -42,43 +42,18 @@ const CustomBarTooltip = ({ active, payload, label }: any) => {
 };
 
 const SourceAnswersBlock = ({ sourceThemeData, catKey, themeDataId, insertText, AnswerRow, colorInfo }: any) => {
-  const [activeSetIndex, setActiveSetIndex] = useState(0);
-
-  useEffect(() => {
-    setActiveSetIndex(0);
-  }, [sourceThemeData]);
-
-  const activeSet = sourceThemeData.answerSets[activeSetIndex];
-  const totalSets = sourceThemeData.answerSets.length;
-
-  if (!activeSet) return null;
-
+  const activeSet = sourceThemeData;
+  if (!activeSet || (!activeSet.infoGebruik && !activeSet.infoBron)) return null;
   return (
     <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md border border-gray-200 dark:border-gray-700 flex flex-col h-full overflow-hidden">
-      {totalSets > 1 && (
-        <div className="flex flex-wrap gap-1 px-4 pt-4 border-b border-gray-200 dark:border-gray-700 bg-gray-100/50 dark:bg-gray-900/30">
-          {sourceThemeData.answerSets.map((_: any, idx: number) => (
-            <button
-              key={idx}
-              onClick={() => setActiveSetIndex(idx)}
-              className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-colors border-t border-l border-r ${
-                activeSetIndex === idx
-                  ? 'bg-gray-50 dark:bg-gray-900/50 ' + colorInfo.text + ' border-gray-200 dark:border-gray-700 border-b-gray-50 dark:border-b-[#111827] translate-y-[1px]'
-                  : 'bg-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border-transparent hover:bg-gray-200/50 dark:hover:bg-gray-700'
-              }`}
-              style={{ zIndex: activeSetIndex === idx ? 10 : 1 }}
-            >
-              Set {idx + 1}
-            </button>
-          ))}
-        </div>
-      )}
-      
-      <div className="p-4 space-y-4">
-        <AnswerRow label="Welke informatie gebruik je?" value={activeSet.infoGebruik} onInsert={() => insertText(activeSet.infoGebruik, catKey, themeDataId)} />
-        <AnswerRow label="Hoe kom je aan die informatie?" value={activeSet.infoBron} onInsert={() => insertText(activeSet.infoBron, catKey, themeDataId)} />
-        <AnswerRow label="Wat levert dat op?" value={activeSet.opbrengst} onInsert={() => insertText(activeSet.opbrengst, catKey, themeDataId)} />
-        <AnswerRow label="Wat doe je ermee?" value={activeSet.actie} onInsert={() => insertText(activeSet.actie, catKey, themeDataId)} />
+      <div className="p-4 flex-1 overflow-y-auto space-y-4">
+        <AnswerRow label="Welke info?" value={activeSet.infoGebruik} onInsert={() => insertText(catKey, themeDataId, activeSet.infoGebruik)} />
+        <AnswerRow label="Bron" value={activeSet.infoBron} onInsert={() => insertText(catKey, themeDataId, activeSet.infoBron)} />
+        <AnswerRow label="Opbrengst" value={activeSet.opbrengst} onInsert={() => insertText(catKey, themeDataId, activeSet.opbrengst)} />
+        <AnswerRow label="Actie" value={activeSet.actie} onInsert={() => insertText(catKey, themeDataId, activeSet.actie)} />
+        {activeSet.delenOptIn === 'Ja' && (
+          <AnswerRow label="Delen" value={activeSet.delen} onInsert={() => insertText(catKey, themeDataId, activeSet.delen)} />
+        )}
       </div>
     </div>
   );
@@ -173,7 +148,7 @@ export const AnalysisView: React.FC<Props> = ({ sourceIds, analysisId, onBack, t
   const handleSyntheseChange = (categoryKey: keyof InterviewData, themeId: string, value: string) => {
     setData(prev => {
       if (!prev) return prev;
-      const arr = prev[categoryKey] as ThemeResponse[];
+      const arr = prev[categoryKey] as AnswerSet[];
       return {
         ...prev,
         [categoryKey]: arr.map(item => item.id === themeId ? { ...item, synthese: value } : item)
@@ -185,7 +160,7 @@ export const AnalysisView: React.FC<Props> = ({ sourceIds, analysisId, onBack, t
     if (!text) return;
     setData(prev => {
       if (!prev) return prev;
-      const arr = prev[categoryKey as keyof InterviewData] as ThemeResponse[];
+      const arr = prev[categoryKey as keyof InterviewData] as AnswerSet[];
       const theme = arr.find(t => t.id === themeId);
       const currentSynthese = theme?.synthese || '';
       
@@ -350,8 +325,8 @@ export const AnalysisView: React.FC<Props> = ({ sourceIds, analysisId, onBack, t
                 </div>
 
                 <div className="space-y-8">
-                  {(data[cat.key as keyof InterviewData] as ThemeResponse[]).map((themeData, idx) => {
-                    const sourceThemeData = (activeSource?.[cat.key as keyof InterviewData] as ThemeResponse[])?.find(t => t.themeName === themeData.themeName) || {} as ThemeResponse;
+                  {(data[cat.key as keyof InterviewData] as AnswerSet[]).map((themeData, idx) => {
+                    const sourceThemeData = (activeSource?.[cat.key as keyof InterviewData] as AnswerSet[])?.find(t => t.setName === themeData.setName) || {} as AnswerSet;
                     
                     const AnswerRow = ({ label, value, onInsert }: { label: string, value: string, onInsert: () => void }) => {
                       if (!value) return null;
@@ -377,7 +352,7 @@ export const AnalysisView: React.FC<Props> = ({ sourceIds, analysisId, onBack, t
                       <div key={themeData.id} className={`flex flex-col border ${cat.color.split(' ')[1]} shadow-sm bg-white dark:bg-gray-800 rounded-md overflow-hidden transition-colors mb-6`}>
                         <div className={`${cat.headerBg} dark:opacity-80 px-4 py-3 flex items-center justify-between border-b ${cat.color.split(' ')[1]}`}>
                           <div className="font-bold text-gray-900 tracking-wide uppercase flex items-center gap-2">
-                            {themeData.themeName}
+                            {themeData.setName}
                           </div>
                         </div>
                         <div className="p-6">
@@ -391,7 +366,7 @@ export const AnalysisView: React.FC<Props> = ({ sourceIds, analysisId, onBack, t
                             </h4>
                             
                             {(() => {
-                              if (!sourceThemeData.answerSets || sourceThemeData.answerSets.length === 0) {
+                              if (!sourceThemeData || !sourceThemeData.id) {
                                 return <div className="text-gray-500 italic text-sm p-4 border border-dashed border-gray-300 dark:border-gray-700 rounded-md">Geen data in deze bron.</div>;
                               }
                               return <SourceAnswersBlock sourceThemeData={sourceThemeData} catKey={cat.key} themeDataId={themeData.id} insertText={insertText} AnswerRow={AnswerRow} colorInfo={getCategoryColors(cat.color)} />;
@@ -430,14 +405,12 @@ export const AnalysisView: React.FC<Props> = ({ sourceIds, analysisId, onBack, t
                 
                 sourceInterviews.forEach(inv => {
                   CATEGORIES.forEach(cat => {
-                    const themes = inv[cat.key as keyof InterviewData] as ThemeResponse[];
+                    const themes = inv[cat.key as keyof InterviewData] as AnswerSet[];
                     themes?.forEach(t => {
-                      t.answerSets?.forEach(a => {
-                        if (a.delenOptIn === 'Ja' && a.delen.trim()) {
-                          if (!practicesByCategory[cat.label]) practicesByCategory[cat.label] = [];
-                          practicesByCategory[cat.label].push({ theme: t.themeName, excie: inv.excie, note: a.delen });
-                        }
-                      });
+                      if (t.delenOptIn === 'Ja' && t.delen?.trim()) {
+                        if (!practicesByCategory[cat.label]) practicesByCategory[cat.label] = [];
+                        practicesByCategory[cat.label].push({ theme: t.setName, excie: inv.excie, note: t.delen });
+                      }
                     });
                   });
                 });

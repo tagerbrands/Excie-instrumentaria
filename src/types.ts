@@ -4,20 +4,16 @@ export type CheckboxGroup = string[];
 
 export interface AnswerSet {
   id: string;
+  setName: string;
   infoGebruik: string;
   infoBron: string;
   opbrengst: string;
   actie: string;
   delenOptIn: 'Ja' | 'Nee' | '';
   delen: string;
+  synthese?: string;
 }
 
-export interface ThemeResponse {
-  id: string;
-  themeName: string;
-  synthese?: string;
-  answerSets: AnswerSet[];
-}
 
 export interface InterviewData {
   isAnalysis?: boolean;
@@ -41,11 +37,11 @@ export interface InterviewData {
   
   // Categories
   categoryNotes?: Record<string, string>;
-  toetsbeleid: ThemeResponse[];
-  toetsorganisatie: ThemeResponse[];
-  toetsbekwaamheid: ThemeResponse[];
-  toetsTaken: ThemeResponse[];
-  toetsprogramma: ThemeResponse[];
+  toetsbeleid: AnswerSet[];
+  toetsorganisatie: AnswerSet[];
+  toetsbekwaamheid: AnswerSet[];
+  toetsTaken: AnswerSet[];
+  toetsprogramma: AnswerSet[];
   
   // Slotvragen
   verdereInstrumenten: string;
@@ -53,8 +49,9 @@ export interface InterviewData {
   vragenBorgenKwaliteit: string;
 }
 
-export const createEmptyAnswerSet = (): AnswerSet => ({
+export const createEmptyAnswerSet = (setName: string = 'Nieuwe Set'): AnswerSet => ({
   id: uuidv4(),
+  setName,
   infoGebruik: '',
   infoBron: '',
   opbrengst: '',
@@ -63,11 +60,6 @@ export const createEmptyAnswerSet = (): AnswerSet => ({
   delen: ''
 });
 
-export const createEmptyThemeResponse = (themeName: string): ThemeResponse => ({
-  id: uuidv4(),
-  themeName,
-  answerSets: [createEmptyAnswerSet()]
-});
 
 export interface ThemeInfo {
   theme: string;
@@ -128,7 +120,7 @@ export const ENTITY_THEMES: Record<string, ThemeInfo[]> = {
     {
       theme: 'Fraudebeleid',
       subthemes: [
-        { subtheme: 'Onderzoek & Sanctioneren', toelichting: 'Na een melding van fraude start een onderzoek dat pedagogisch is ingericht, met als doel het leerproces van de student te ondersteunen in plaats van te straffen.', suggesties: 'Ontwerp en implementeer een methodiek voor fraudeonderzoek die recht doet aan haar doel en evalueer deze periodiek. Leg een sanctieladder transparant vast, en sanctioneer a.d.h.v. een heldere contextschets en onderbouwing.' }
+        { subtheme: 'Onderzoek & Sanctioneren', toelichting: 'Na een melding van fraude start een onderzoek dat pedagogisch is ingericht, met als doel het leerproces van de student te ondersteunen in plaats van te straffen.', suggesties: 'Ontwerp en implementeer een methodiek voor fraudeonderzoek die recht doet aan haar doel en evalueer deze periodiek. Leg een maatregelenladder transparant vast, en neem maatregelen a.d.h.v. een heldere contextschets en onderbouwing.' }
       ]
     }
   ],
@@ -178,11 +170,11 @@ export const defaultInterview: Omit<InterviewData, 'id' | 'lastUpdated'> = {
   borgingsagendaDelen: '',
   modelKader: '',
   categoryNotes: {},
-  toetsbeleid: ENTITY_THEMES['toetsbeleid'].map(t => createEmptyThemeResponse(t.theme)),
-  toetsorganisatie: ENTITY_THEMES['toetsorganisatie'].map(t => createEmptyThemeResponse(t.theme)),
-  toetsbekwaamheid: ENTITY_THEMES['toetsbekwaamheid'].map(t => createEmptyThemeResponse(t.theme)),
-  toetsTaken: ENTITY_THEMES['toetsTaken'].map(t => createEmptyThemeResponse(t.theme)),
-  toetsprogramma: ENTITY_THEMES['toetsprogramma'].map(t => createEmptyThemeResponse(t.theme)),
+  toetsbeleid: [createEmptyAnswerSet('Set 1')],
+  toetsorganisatie: [createEmptyAnswerSet('Set 1')],
+  toetsbekwaamheid: [createEmptyAnswerSet('Set 1')],
+  toetsTaken: [createEmptyAnswerSet('Set 1')],
+  toetsprogramma: [createEmptyAnswerSet('Set 1')],
   verdereInstrumenten: '',
   eigenstandigOordeel: '',
   vragenBorgenKwaliteit: '',
