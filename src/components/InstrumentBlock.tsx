@@ -22,7 +22,7 @@ export const InstrumentBlock: React.FC<Props> = ({ colorClass, data, index, isRe
   };
 
   return (
-    <div className={`flex flex-col gap-5 ${colorClass}`}>
+    <div className={`flex flex-col gap-5 p-5 md:p-6 border rounded-xl ${colorClass}`}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-2">
          <label className="text-sm font-bold text-gray-700 dark:text-gray-300 md:col-span-1">Setnaam</label>
          <div className="md:col-span-2 flex justify-between items-center gap-4">
